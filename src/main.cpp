@@ -48,9 +48,9 @@ int main(int argc, char *argv[]) {
     foundation::Allocator &allocator = foundation::memory_globals::default_allocator();
 
     {
-        engine::Engine engine(allocator, "assets/config.ini");
-
-        game::Game game(allocator);
+        const char *config_path = "assets/config.ini";
+        engine::Engine engine(allocator, config_path);
+        game::Game game(allocator, config_path);
         engine::EngineCallbacks engine_callbacks;
         engine_callbacks.on_input = game::on_input;
         engine_callbacks.update = game::update;

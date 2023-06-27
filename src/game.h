@@ -8,9 +8,19 @@
 namespace engine {
 struct Engine;
 struct InputCommand;
+struct ActionBinds;
+struct Canvas;
 }; // namespace engine
 
+typedef struct ini_t ini_t;
+
 namespace game {
+
+/// Murmur hashed actions.
+enum class ActionHash : uint64_t {
+    NONE = 0x0ULL,
+    QUIT = 0x387bbb994ac3551ULL,
+};
 
 /**
  * @brief An enum that describes a specific game state.
@@ -34,10 +44,13 @@ enum class GameState {
 };
 
 struct Game {
-    Game(foundation::Allocator &allocator);
+    Game(foundation::Allocator &allocator, const char *config_path);
     ~Game();
 
     foundation::Allocator &allocator;
+    ini_t *config;
+    engine::ActionBinds *action_binds;
+    engine::Canvas *canvas;
     GameState game_state;
 };
 
