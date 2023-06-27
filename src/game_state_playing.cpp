@@ -16,6 +16,8 @@ using namespace foundation;
 
 void game_state_playing_enter(engine::Engine &engine, Game &game) {
     engine::init_canvas(engine, *game.canvas, game.config);
+
+    game.player.pos = {8, 8};
 }
 
 void game_state_playing_leave(engine::Engine &engine, Game &game) {
@@ -54,16 +56,19 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
     (void)t;
     (void)dt;
 
-    assert(game.canvas != nullptr);
+
+}
+
+void game_state_playing_render(engine::Engine &engine, Game &game) {
     using namespace engine::canvas;
 
     engine::Canvas &c = *game.canvas;
     clear(c, engine::color::black);
 
-    sprite(c, 812, 8, 8, engine::color::pico8::peach);
-}
+    // draw player
+    sprite(c, 405, game.player.pos.x, game.player.pos.y, engine::color::pico8::peach);
+    sprite(c, 206, game.player.pos.x, game.player.pos.y + 8, engine::color::pico8::peach);
 
-void game_state_playing_render(engine::Engine &engine, Game &game) {
     engine::render_canvas(engine, *game.canvas);
 }
 

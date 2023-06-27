@@ -1,6 +1,7 @@
 #pragma once
 
 #pragma warning(push, 0)
+#include <engine/math.inl>
 #include <collection_types.h>
 #include <memory_types.h>
 #pragma warning(pop)
@@ -43,6 +44,14 @@ enum class GameState {
     Terminate,
 };
 
+struct Player {
+    math::Vector2 pos = {0, 0};
+    math::Vector2 vel = {0, 0};
+    float speed_incr = 0.15f;
+    float max_speed = 2.0f;
+    float drag = 0.025f;
+};
+
 struct Game {
     Game(foundation::Allocator &allocator, const char *config_path);
     ~Game();
@@ -52,6 +61,7 @@ struct Game {
     engine::ActionBinds *action_binds;
     engine::Canvas *canvas;
     GameState game_state;
+    Player player;
 };
 
 /**
