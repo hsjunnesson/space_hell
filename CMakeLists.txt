@@ -33,12 +33,11 @@ add_executable(${PROJECT_NAME}
     "src/main.cpp"
     "src/game.h"
     "src/game.cpp"
+    "src/game_state_playing.cpp"
 )
 
 
 # Includes
-
-include_directories(SYSTEM ${backward_SOURCE_DIR})
 
 if (LIVE_PP)
     include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/LivePP/API)

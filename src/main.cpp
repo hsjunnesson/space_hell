@@ -1,8 +1,8 @@
 #include "game.h"
 
 #pragma warning(push, 0)
-#include <engine/log.h>
 #include <engine/engine.h>
+#include <engine/log.h>
 
 #include <backward.hpp>
 #include <memory.h>
@@ -20,16 +20,16 @@ int main(int argc, char *argv[]) {
     // Validate platform
     {
         unsigned int x = 1;
-        char *c = (char*) &x;
+        char *c = (char *)&x;
         if ((int)*c == 0) {
             log_fatal("Unsupported platform: big endian");
         }
 
-        if constexpr(sizeof(char) != sizeof(uint8_t)) {
+        if constexpr (sizeof(char) != sizeof(uint8_t)) {
             log_fatal("Unsupported platform: invalid char size");
         }
 
-        if constexpr(sizeof(float) != 4) {
+        if constexpr (sizeof(float) != 4) {
             log_fatal("Unsupported platform: invalid float size");
         }
     }
@@ -48,18 +48,18 @@ int main(int argc, char *argv[]) {
     foundation::Allocator &allocator = foundation::memory_globals::default_allocator();
 
     {
-        engine::Engine engine(allocator, "assets/engine_params.json");
+        engine::Engine engine(allocator, "assets/config.ini");
 
-        // game::Game game(allocator);
-        // engine::EngineCallbacks engine_callbacks;
-        // engine_callbacks.on_input = game::on_input;
-        // engine_callbacks.update = game::update;
-        // engine_callbacks.render = game::render;
-        // engine_callbacks.render_imgui = game::render_imgui;
-        // engine_callbacks.on_shutdown = game::on_shutdown;
+        game::Game game(allocator);
+        engine::EngineCallbacks engine_callbacks;
+        engine_callbacks.on_input = game::on_input;
+        engine_callbacks.update = game::update;
+        engine_callbacks.render = game::render;
+        engine_callbacks.render_imgui = game::render_imgui;
+        engine_callbacks.on_shutdown = game::on_shutdown;
 
-        // engine.engine_callbacks = &engine_callbacks;
-        // engine.game_object = &game;
+        engine.engine_callbacks = &engine_callbacks;
+        engine.game_object = &game;
 
         status = engine::run(engine);
     }
