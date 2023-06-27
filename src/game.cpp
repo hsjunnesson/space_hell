@@ -2,19 +2,19 @@
 
 #pragma warning(push, 0)
 #include <memory.h>
-#include <temp_allocator.h>
 #include <string_stream.h>
+#include <temp_allocator.h>
 
 #include <functional>
 
-#include <engine/ini.h>
-#include <engine/engine.h>
-#include <engine/input.h>
-#include <engine/log.h>
 #include <engine/action_binds.h>
 #include <engine/canvas.h>
 #include <engine/config.h>
+#include <engine/engine.h>
 #include <engine/file.h>
+#include <engine/ini.h>
+#include <engine/input.h>
+#include <engine/log.h>
 #pragma warning(pop)
 
 namespace game {
@@ -70,7 +70,7 @@ Game::Game(Allocator &allocator, const char *config_path)
 Game::~Game() {
     MAKE_DELETE(allocator, ActionBinds, action_binds);
     MAKE_DELETE(allocator, Canvas, canvas);
-    
+
     if (config) {
         ini_destroy(config);
     }

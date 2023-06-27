@@ -5,10 +5,10 @@
 
 #include <hash.h>
 
-#include <engine/input.h>
 #include <engine/action_binds.h>
-#include <engine/log.h>
 #include <engine/canvas.h>
+#include <engine/input.h>
+#include <engine/log.h>
 #pragma warning(pop)
 
 namespace game {
