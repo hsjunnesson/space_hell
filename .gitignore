@@ -1,0 +1,15 @@
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+.DS_Store
+
+/.vs
+/LivePP
+/build
+/project.header_hero
+/imgui.ini
+/debug.rdbg
