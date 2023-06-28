@@ -50,6 +50,7 @@ enum class GameState {
 };
 
 struct Player {
+    int32_t score = 0;
     math::Vector2f pos = {0.0f, 0.0f};
     math::Vector2f vel = {0.0f, 0.0f};
     bool button_up = false;
@@ -57,10 +58,19 @@ struct Player {
     bool button_left = false;
     bool button_right = false;
     bool button_action = false;
-    float speed_incr = 5.0f;
+    float speed_incr = 4.0f;
     float max_speed = 20.0f;
     float drag = 0.025f;
     math::Rect bounds = {0,4, 8,6};
+};
+
+struct Enemy {
+    math::Vector2f pos = {0.0f, 0.0f};
+    float speed = 0.06f;
+    float rot = 0.0f;
+    float rot_speed = 0.002f;
+    float bullet_rate = 25.0f;
+    math::Rect bounds = {1,0, 14,16};
 };
 
 struct Game {
@@ -73,6 +83,7 @@ struct Game {
     engine::Canvas *canvas;
     GameState game_state;
     Player player;
+    Enemy enemy;
 };
 
 /**

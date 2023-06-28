@@ -20,7 +20,10 @@ void game_state_playing_enter(engine::Engine &engine, Game &game) {
     engine::init_canvas(engine, *game.canvas, game.config);
 
     game.player = Player();
-    game.player.pos = {8, 8};
+    game.player.pos = {24, 24};
+
+    game.enemy = Enemy();
+    game.enemy.pos = {game.canvas->width / 2.0f - game.enemy.bounds.size.x / 2.0f, game.canvas->height / 2.0f - game.enemy.bounds.size.y / 2.0f};
 }
 
 void game_state_playing_leave(engine::Engine &engine, Game &game) {
@@ -146,61 +149,68 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
         // check for out of bounds
         // account for player size
         {
-            if (game.player.pos.x + game.player.bounds.origin.x + game.player.bounds.size.x > game.canvas->width) {
-                game.player.pos.x = (float)game.canvas->width - game.player.bounds.size.x;
+            if (game.player.pos.x + game.player.bounds.origin.x + game.player.bounds.size.x > game.canvas->width - 1) {
+                game.player.pos.x = (float)game.canvas->width - game.player.bounds.size.x - 1;
                 game.player.vel.x = 0.0f;
             }
 
-            if (game.player.pos.x + game.player.bounds.origin.x < 0) {
-                game.player.pos.x = -(float)game.player.bounds.origin.x;
+            if (game.player.pos.x + game.player.bounds.origin.x < 1) {
+                game.player.pos.x = -(float)game.player.bounds.origin.x + 1;
                 game.player.vel.x = 0.0f;
             }
 
-            if (game.player.pos.y + game.player.bounds.origin.y + game.player.bounds.size.y > game.canvas->height) {
-                game.player.pos.y = (float)game.canvas->height - game.player.bounds.origin.y - game.player.bounds.size.y;
+            if (game.player.pos.y + game.player.bounds.origin.y + game.player.bounds.size.y > game.canvas->height - 1) {
+                game.player.pos.y = (float)game.canvas->height - game.player.bounds.origin.y - game.player.bounds.size.y - 1;
                 game.player.vel.y = 0.0f;
             }
 
-            if (game.player.pos.y + game.player.bounds.origin.y < 0) {
-                game.player.pos.y = -(float)game.player.bounds.origin.y;
+            if (game.player.pos.y + game.player.bounds.origin.y < 12) {
+                game.player.pos.y = -(float)game.player.bounds.origin.y + 12;
                 game.player.vel.y = 0.0f;
             }
         }
+    }
+
+    // update enemy
+    {
+        game.enemy.rot += game.enemy.rot_speed * dt;
+
+        float tt = t * game.enemy.speed;
+        float scale = 2.0f / (3.0f - cosf(2.0f * tt));
+        float x = scale * cosf(tt);
+        float y = scale * sinf(2.0f * tt) / 2.0f;
+        float x2 = game.canvas->width / 2.0f + x * 72.0f;
+        float y2 = game.canvas->height / 2.0f + y * 80.0f;
+
+        game.enemy.pos.x = x2;
+        game.enemy.pos.y = y2;
     }
 }
 
 void game_state_playing_render(engine::Engine &engine, Game &game) {
     using namespace engine::canvas;
+    namespace ss = foundation::string_stream;
+    namespace color = engine::color::pico8;
+
+    TempAllocator128 ta;
 
     engine::Canvas &c = *game.canvas;
     clear(c, engine::color::black);
 
     // draw player
-    sprite(c, 405, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y, engine::color::pico8::peach);
-    sprite(c, 206, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y + 8, engine::color::pico8::peach);
+    sprite(c, 405, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y, color::peach);
+    sprite(c, 206, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y + c.sprite_size, color::peach);
 
-    // debug
-    {
-        using namespace foundation;
-        TempAllocator128 ta;
-        string_stream::Buffer ss(ta);
-        string_stream::printf(ss, "pos %.2f %.2f\nvel %.2f %.2f", game.player.pos.x, game.player.pos.y, game.player.vel.x, game.player.vel.y);
-        print(c, string_stream::c_str(ss), 0, 0, engine::color::white);
+    // draw enemy
+    sprite(c, 514, (int32_t)game.enemy.pos.x, (int32_t)game.enemy.pos.y, color::light_gray, 2, 2);
 
-        if (game.player.button_up) {
-            sprite(c, 14, c.width-8*2, 0);
-        }
-        if (game.player.button_right) {
-            sprite(c, 15, c.width-8, 8);
-        }
-        if (game.player.button_down) {
-            sprite(c, 46, c.width-8*2, 8);
-        }
-        if (game.player.button_left) {
-            sprite(c, 47, c.width-8*3, 8);
-        }
-    }
-
+    // draw ui
+    rectangle(c, 0, 0, c.width - 1, c.height - 1, color::dark_blue);
+    ss::Buffer score_buffer(ta);
+    ss::printf(score_buffer, "score:%u", game.player.score);
+    print(c, ss::c_str(score_buffer), 2, 2, color::white);
+    line(c, 0, 11, c.width - 1, 11, color::dark_blue);
+    
     engine::render_canvas(engine, *game.canvas);
 }
 
