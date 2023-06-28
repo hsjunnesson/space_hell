@@ -21,6 +21,11 @@ namespace game {
 enum class ActionHash : uint64_t {
     NONE = 0x0ULL,
     QUIT = 0x387bbb994ac3551ULL,
+    LEFT = 0xea159ebe206206adULL,
+    UP = 0x70f16e1b53096510ULL,
+    RIGHT = 0x40202ed91356d4aaULL,
+    DOWN = 0x8703d162c3a6b13eULL,
+    ACTION = 0x599a3850c84f9970ULL,
 };
 
 /**
@@ -45,11 +50,17 @@ enum class GameState {
 };
 
 struct Player {
-    math::Vector2 pos = {0, 0};
-    math::Vector2 vel = {0, 0};
-    float speed_incr = 0.15f;
-    float max_speed = 2.0f;
+    math::Vector2f pos = {0.0f, 0.0f};
+    math::Vector2f vel = {0.0f, 0.0f};
+    bool button_up = false;
+    bool button_down = false;
+    bool button_left = false;
+    bool button_right = false;
+    bool button_action = false;
+    float speed_incr = 5.0f;
+    float max_speed = 20.0f;
     float drag = 0.025f;
+    math::Rect bounds = {0,4, 8,6};
 };
 
 struct Game {
