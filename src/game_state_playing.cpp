@@ -129,7 +129,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
             game.player.vel.x = norm_vel_x * game.player.max_speed;
             game.player.vel.y = norm_vel_y * game.player.max_speed;
             vel_mag = game.player.max_speed;
-        } else if (vel_mag < 0.1f) {
+        } else if (vel_mag < 0.05f) {
             // check if almost stopped
             game.player.vel.x = 0.0f;
             game.player.vel.y = 0.0f;
