@@ -75,6 +75,16 @@ struct Enemy {
     float rot_speed = 0.4f;
     float bullet_rate = 1.0f;
     float bullet_cooldown = 0.0f;
+    float bullet_speed = 15.0f;
+    math::Rect bounds = {{0, 0}, {8, 8}};
+};
+
+struct Food {
+    bool spawned = false;
+    float grace_timer = 0.0f;
+    float grace = 1.5f;
+    math::Vector2f pos;
+    int32_t sprite = 0;
     math::Rect bounds = {{0, 0}, {8, 8}};
 };
 
@@ -97,8 +107,8 @@ struct Game {
     GameState game_state;
     Player player;
     Enemy enemy;
+    Food food;
     foundation::Array<Bullet> bullets;
-    float bullet_speed;
 };
 
 /**

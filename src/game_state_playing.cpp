@@ -30,6 +30,8 @@ void game_state_playing_enter(engine::Engine &engine, Game &game) {
 
     game.enemy = Enemy();
     game.enemy.pos = {game.canvas->width / 2.0f - game.enemy.bounds.size.x / 2.0f, game.canvas->height / 2.0f - game.enemy.bounds.size.y / 2.0f};
+    
+    game.food = Food();
 }
 
 void game_state_playing_leave(engine::Engine &engine, Game &game) {
@@ -211,8 +213,8 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
                 b.pos.y = game.enemy.pos.y + game.enemy.bounds.origin.y + game.enemy.bounds.size.y / 2.0f;
 
                 float angle = i * (float)M_PI_2 + game.enemy.rot;
-                b.vel.x = game.bullet_speed * cosf(angle);
-                b.vel.y = game.bullet_speed * sinf(angle);
+                b.vel.x = game.enemy.bullet_speed * cosf(angle);
+                b.vel.y = game.enemy.bullet_speed * sinf(angle);
 
                 array::push_back(game.bullets, b);
             }
@@ -238,6 +240,23 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
             }
         }
     }
+    
+    // update food
+    {
+        if (game.food.spawned) {
+            // todo: check if overlapping
+        } else {
+            if (game.food.grace_timer >= game.food.grace) {
+                bool found_pos = false;
+                
+                while (!found_pos) {
+                    // todo: finish here
+                }
+            } else {
+                game.food.grace_timer += dt;
+            }
+        }
+    }
 }
 
 void game_state_playing_render(engine::Engine &engine, Game &game) {
@@ -249,12 +268,17 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
 
     engine::Canvas &c = *game.canvas;
     clear(c, engine::color::black);
+
+    // draw food
+    if (game.food.spawned) {
+        sprite(c, game.food.sprite, (int32_t)game.food.pos.x, (int32_t)game.food.pos.y);
+    }
     
     // draw bullets
     for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
         pset(c, (int32_t)bullet_iter->pos.x, (int32_t)bullet_iter->pos.y, color::yellow);
     }
-    
+
     // draw player
     sprite(c, 856, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y);
 
