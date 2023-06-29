@@ -28,13 +28,16 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/chocolate")
 
 # Main game source
 
-# Create executable
-add_executable(${PROJECT_NAME}
+set(SRC_space_hell
     "src/main.cpp"
     "src/game.h"
     "src/game.cpp"
     "src/game_state_playing.cpp"
+    "src/util.h"
 )
+
+# Create executable
+add_executable(${PROJECT_NAME} ${SRC_space_hell})
 
 
 # Includes
@@ -61,11 +64,11 @@ if (MSVC)
     source_group("foundation" FILES ${bitsquidfoundation_SOURCE_DIR})
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
     set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-    set_source_files_properties(${SRC_7DRLx18} PROPERTIES COMPILE_FLAGS "/W4")
+    set_source_files_properties(${SRC_space_hell} PROPERTIES COMPILE_FLAGS "/W4 /WX /wd4061")
 
     if (LIVE_PP)
         target_compile_definitions(${PROJECT_NAME} PRIVATE LIVE_PP=1)
-        target_compile_options(${PROJECT_NAME} PRIVATE /Zi /hotpatch /Gm-)
-        target_link_options(${PROJECT_NAME} PRIVATE /FUNCTIONPADMIN /OPT:NOREF /OPT:NOICF)
+        target_compile_options(${PROJECT_NAME} PRIVATE /Zi /Gm-)
+        target_link_options(${PROJECT_NAME} PRIVATE /FUNCTIONPADMIN /OPT:NOREF /OPT:NOICF /DEBUG:FULL)
     endif()
 endif()

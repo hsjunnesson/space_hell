@@ -4,8 +4,8 @@
 #include <cassert>
 
 #include <hash.h>
-#include <temp_allocator.h>
 #include <string_stream.h>
+#include <temp_allocator.h>
 
 #include <engine/action_binds.h>
 #include <engine/canvas.h>
@@ -27,6 +27,8 @@ void game_state_playing_enter(engine::Engine &engine, Game &game) {
 }
 
 void game_state_playing_leave(engine::Engine &engine, Game &game) {
+    (void)engine;
+    (void)game;
 }
 
 void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::InputCommand &input_command) {
@@ -99,7 +101,7 @@ void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::Inp
 }
 
 void game_state_playing_update(engine::Engine &engine, Game &game, float t, float dt) {
-    (void)t;
+    (void)engine;
 
     // Update player
     {
@@ -210,7 +212,7 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
     ss::printf(score_buffer, "score:%u", game.player.score);
     print(c, ss::c_str(score_buffer), 2, 2, color::white);
     line(c, 0, 11, c.width - 1, 11, color::dark_blue);
-    
+
     engine::render_canvas(engine, *game.canvas);
 }
 

@@ -31,7 +31,11 @@ Game::Game(Allocator &allocator, const char *config_path)
 , config(nullptr)
 , action_binds(nullptr)
 , canvas(nullptr)
-, game_state(GameState::None) {
+, imgui_debug(false)
+, padding()
+, game_state(GameState::None)
+, player()
+, enemy() {
     using namespace string_stream;
     TempAllocator1024 ta;
 
@@ -48,19 +52,6 @@ Game::Game(Allocator &allocator, const char *config_path)
         if (!config) {
             log_fatal("Could not parse config file %s", config_path);
         }
-
-        // auto read_property = [&ini](const char *section, const char *property, const std::function<void(const char *)> success) {
-        //     const char *s = engine::config::read_property(ini, section, property);
-        //     if (s) {
-        //         success(s);
-        //     } else {
-        //         if (!section) {
-        //             section = "global property";
-        //         }
-
-        //         log_fatal("Invalid config file, missing [%s] %s", section, property);
-        //     }
-        // };
     }
 
     action_binds = MAKE_NEW(allocator, engine::ActionBinds, allocator, config_path);

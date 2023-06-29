@@ -8,9 +8,11 @@
 #include <memory.h>
 
 #if defined(LIVE_PP)
-#include "LPP_API.h"
 #include <Windows.h>
+
+#include "LPP_API_x64_CPP.h"
 #endif
+
 #pragma warning(pop)
 
 int main(int argc, char *argv[]) {
@@ -35,8 +37,8 @@ int main(int argc, char *argv[]) {
     }
 
 #if defined(LIVE_PP)
-    HMODULE livePP = lpp::lppLoadAndRegister(L"LivePP", "AGroupName");
-    lpp::lppEnableAllCallingModulesSync(livePP);
+    lpp::LppDefaultAgent lpp_agent = lpp::LppCreateDefaultAgent(L"LivePP");
+    lpp_agent.EnableModule(lpp::LppGetCurrentModulePath(), lpp::LPP_MODULES_OPTION_ALL_IMPORT_MODULES);
 #endif
 
     int status = 0;
@@ -67,8 +69,7 @@ int main(int argc, char *argv[]) {
     foundation::memory_globals::shutdown();
 
 #if defined(LIVE_PP)
-    lpp::lppShutdown(livePP);
-    ::FreeLibrary(livePP);
+    lpp::LppDestroyDefaultAgent(&lpp_agent);
 #endif
 
     return status;

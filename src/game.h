@@ -1,8 +1,10 @@
 #pragma once
 
+#include "util.h"
+
 #pragma warning(push, 0)
-#include <engine/math.inl>
 #include <collection_types.h>
+#include <engine/math.inl>
 #include <memory_types.h>
 #pragma warning(pop)
 
@@ -30,7 +32,7 @@ enum class ActionHash : uint64_t {
 
 /**
  * @brief An enum that describes a specific game state.
- * 
+ *
  */
 enum class GameState {
     // No game state.
@@ -58,10 +60,11 @@ struct Player {
     bool button_left = false;
     bool button_right = false;
     bool button_action = false;
+    char padding[3];
     float speed_incr = 4.0f;
     float max_speed = 20.0f;
     float drag = 0.025f;
-    math::Rect bounds = {0,4, 8,6};
+    math::Rect bounds = {{0, 4}, {8, 6}};
 };
 
 struct Enemy {
@@ -70,17 +73,20 @@ struct Enemy {
     float rot = 0.0f;
     float rot_speed = 0.002f;
     float bullet_rate = 25.0f;
-    math::Rect bounds = {1,0, 14,16};
+    math::Rect bounds = {{1, 0}, {14, 16}};
 };
 
 struct Game {
     Game(foundation::Allocator &allocator, const char *config_path);
     ~Game();
+    DELETE_COPY_AND_MOVE(Game)
 
     foundation::Allocator &allocator;
     ini_t *config;
     engine::ActionBinds *action_binds;
     engine::Canvas *canvas;
+    bool imgui_debug;
+    char padding[3];
     GameState game_state;
     Player player;
     Enemy enemy;
@@ -98,7 +104,7 @@ void update(engine::Engine &engine, void *game_object, float t, float dt);
 
 /**
  * @brief Callback to the game that an input has ocurred.
- * 
+ *
  * @param engine The engine which calls this function
  * @param game_object The game to signal.
  * @param input_command The input command.
@@ -115,7 +121,7 @@ void render(engine::Engine &engine, void *game_object);
 
 /**
  * @brief Renders the imgui
- * 
+ *
  * @param engine The engine which calls this function
  * @param game_object The game to render
  */
@@ -123,7 +129,7 @@ void render_imgui(engine::Engine &engine, void *game_object);
 
 /**
  * @brief Asks the game to quit.
- * 
+ *
  * @param engine The engine which calls this function
  * @param game_object The game to render
  */
@@ -131,7 +137,7 @@ void on_shutdown(engine::Engine &engine, void *game_object);
 
 /**
  * @brief Transition a Game to another game state.
- * 
+ *
  * @param engine The engine which calls this function
  * @param game The game to transition
  * @param game_state The GameState to transition to.
