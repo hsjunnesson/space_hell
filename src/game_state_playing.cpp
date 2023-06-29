@@ -1,9 +1,11 @@
 #include "game.h"
+#include "util.h"
 
 #pragma warning(push, 0)
 #include <cassert>
 
 #include <hash.h>
+#include <queue.h>
 #include <string_stream.h>
 #include <temp_allocator.h>
 
@@ -11,6 +13,8 @@
 #include <engine/canvas.h>
 #include <engine/input.h>
 #include <engine/log.h>
+
+#include <imgui.h>
 #pragma warning(pop)
 
 namespace game {
@@ -94,6 +98,12 @@ void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::Inp
             }
             break;
         }
+        case ActionHash::DEBUG: {
+            if (pressed) {
+                game.imgui_debug = !game.imgui_debug;
+            }
+            break;
+        }
         default:
             break;
         }
@@ -102,7 +112,9 @@ void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::Inp
 
 void game_state_playing_update(engine::Engine &engine, Game &game, float t, float dt) {
     (void)engine;
-
+    
+    using namespace foundation;
+    
     // Update player
     {
         float steer_x = 0.0f;
@@ -175,8 +187,10 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
 
     // update enemy
     {
+        // rotate bullet spawner
         game.enemy.rot += game.enemy.rot_speed * dt;
-
+        
+        // update enemy position
         float tt = t * game.enemy.speed;
         float scale = 2.0f / (3.0f - cosf(2.0f * tt));
         float x = scale * cosf(tt);
@@ -186,6 +200,44 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
 
         game.enemy.pos.x = x2;
         game.enemy.pos.y = y2;
+        
+        // spawn 4 bullets every few frames
+        if (game.enemy.bullet_cooldown >= game.enemy.bullet_rate) {
+            for (int i = 0; i < 4; ++i) {
+                Bullet b;
+                b.pos.x = game.enemy.pos.x + game.enemy.bounds.origin.x + game.enemy.bounds.size.x / 2.0f;
+                b.pos.y = game.enemy.pos.y + game.enemy.bounds.origin.y + game.enemy.bounds.size.y / 2.0f;
+                
+                float rot = game.enemy.rot + 0.25f * i;
+                float vel_x = 0.0f;
+                float vel_y = game.bullet_speed;
+                
+                b.vel.x = vel_x * cosf(rot) - vel_y * sinf(rot);
+                b.vel.y = vel_x * sinf(rot) + vel_y * cosf(rot);
+                
+                array::push_back(game.bullets, b);
+            }
+            
+            game.enemy.bullet_cooldown = dt;
+        } else {
+            game.enemy.bullet_cooldown += dt;
+        }
+    }
+    
+    // update bullets
+    {
+        for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
+            bullet_iter->pos.x += bullet_iter->vel.x * dt;
+            bullet_iter->pos.y += bullet_iter->vel.y * dt;
+        }
+
+        // check for out of bounds bullets
+        const math::Rect game_rect = { { 0, 12 }, { game.canvas->width, game.canvas->height - 12 } };
+        for (uint32_t i = 0; i < array::size(game.bullets); ++i) {
+            if (!math::is_inside(game_rect, game.bullets[i].pos)) {
+                swap_pop(game.bullets, i);
+            }
+        }
     }
 }
 
@@ -198,7 +250,12 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
 
     engine::Canvas &c = *game.canvas;
     clear(c, engine::color::black);
-
+    
+    // draw bullets
+    for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
+        pset(c, (int32_t)bullet_iter->pos.x, (int32_t)bullet_iter->pos.y, color::yellow);
+    }
+    
     // draw player
     sprite(c, 405, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y, color::peach);
     sprite(c, 206, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y + c.sprite_size, color::peach);
@@ -214,6 +271,34 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
     line(c, 0, 11, c.width - 1, 11, color::dark_blue);
 
     engine::render_canvas(engine, *game.canvas);
+}
+
+void game_state_playing_render_imgui(engine::Engine &engine, Game &game) {
+    (void)engine;
+
+    if (game.imgui_debug) {
+        ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Once);
+        ImGui::SetNextWindowPos(ImVec2(8, 8), ImGuiCond_Once);
+        if (!ImGui::Begin("Debug", &game.imgui_debug)) {
+            ImGui::End();
+            return;
+        }
+
+        ImGui::Text("Player");
+        ImGui::Text("Position: %.1f, %.1f", game.player.pos.x, game.player.pos.y);
+        ImGui::Text("Velocity: %.1f, %.1f", game.player.vel.x, game.player.vel.y);
+
+        ImGui::Text("Enemy");
+        ImGui::Text("Position: %.1f, %.1f", game.enemy.pos.x, game.enemy.pos.y);
+
+        ImGui::Text("Bullets: %d", array::size(game.bullets));
+
+        if (ImGui::Button("Clear Bullets")) {
+            array::clear(game.bullets);
+        }
+
+        ImGui::End();
+    }
 }
 
 } // namespace game

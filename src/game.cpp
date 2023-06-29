@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <string_stream.h>
 #include <temp_allocator.h>
+#include <queue.h>
 
 #include <functional>
 
@@ -25,6 +26,7 @@ void game_state_playing_leave(engine::Engine &engine, Game &game);
 void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::InputCommand &input_command);
 void game_state_playing_update(engine::Engine &engine, Game &game, float t, float dt);
 void game_state_playing_render(engine::Engine &engine, Game &game);
+void game_state_playing_render_imgui(engine::Engine &engine, Game &game);
 
 Game::Game(Allocator &allocator, const char *config_path)
 : allocator(allocator)
@@ -35,7 +37,9 @@ Game::Game(Allocator &allocator, const char *config_path)
 , padding()
 , game_state(GameState::None)
 , player()
-, enemy() {
+, enemy()
+, bullets(allocator)
+, bullet_speed(10.0f) {
     using namespace string_stream;
     TempAllocator1024 ta;
 
@@ -131,8 +135,21 @@ void render(engine::Engine &engine, void *game_object) {
 }
 
 void render_imgui(engine::Engine &engine, void *game_object) {
-    (void)engine;
-    (void)game_object;
+    if (!game_object) {
+        return;
+    }
+
+    Game &game = (*(Game *)game_object);
+
+    switch (game.game_state) {
+    case GameState::Playing: {
+        game_state_playing_render_imgui(engine, game);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
 }
 
 void on_shutdown(engine::Engine &engine, void *game_object) {

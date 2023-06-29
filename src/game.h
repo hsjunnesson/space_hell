@@ -28,6 +28,7 @@ enum class ActionHash : uint64_t {
     RIGHT = 0x40202ed91356d4aaULL,
     DOWN = 0x8703d162c3a6b13eULL,
     ACTION = 0x599a3850c84f9970ULL,
+    DEBUG = 0x44591a12d077d46ULL,
 };
 
 /**
@@ -71,9 +72,15 @@ struct Enemy {
     math::Vector2f pos = {0.0f, 0.0f};
     float speed = 0.06f;
     float rot = 0.0f;
-    float rot_speed = 0.002f;
-    float bullet_rate = 25.0f;
+    float rot_speed = 0.2f;
+    float bullet_rate = 2.0f;
+    float bullet_cooldown = 0.0f;
     math::Rect bounds = {{1, 0}, {14, 16}};
+};
+
+struct Bullet {
+    math::Vector2f pos = { 0.0f, 0.0f };
+    math::Vector2f vel = { 0.0f, 0.0f };
 };
 
 struct Game {
@@ -90,6 +97,8 @@ struct Game {
     GameState game_state;
     Player player;
     Enemy enemy;
+    foundation::Array<Bullet> bullets;
+    float bullet_speed;
 };
 
 /**
