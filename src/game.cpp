@@ -39,7 +39,7 @@ Game::Game(Allocator &allocator, const char *config_path)
 , player()
 , enemy()
 , bullets(allocator)
-, bullet_speed(10.0f) {
+, bullet_speed(15.0f) {
     using namespace string_stream;
     TempAllocator1024 ta;
 

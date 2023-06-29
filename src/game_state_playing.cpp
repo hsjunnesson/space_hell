@@ -3,6 +3,7 @@
 
 #pragma warning(push, 0)
 #include <cassert>
+#include <cmath>
 
 #include <hash.h>
 #include <queue.h>
@@ -18,6 +19,7 @@
 #pragma warning(pop)
 
 namespace game {
+
 using namespace foundation;
 
 void game_state_playing_enter(engine::Engine &engine, Game &game) {
@@ -121,20 +123,20 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
         float steer_y = 0.0f;
 
         if (game.player.button_up) {
-            steer_y -= game.player.speed_incr * dt;
+            steer_y -= game.player.speed_incr;
         }
         if (game.player.button_down) {
-            steer_y += game.player.speed_incr * dt;
+            steer_y += game.player.speed_incr;
         }
         if (game.player.button_left) {
-            steer_x -= game.player.speed_incr * dt;
+            steer_x -= game.player.speed_incr;
         }
         if (game.player.button_right) {
-            steer_x += game.player.speed_incr * dt;
+            steer_x += game.player.speed_incr;
         }
 
-        game.player.vel.x += steer_x;
-        game.player.vel.y += steer_y;
+        game.player.vel.x += steer_x * dt;
+        game.player.vel.y += steer_y * dt;
 
         // velocity magnitude
         float vel_mag = sqrtf(game.player.vel.x * game.player.vel.x + game.player.vel.y * game.player.vel.y);
@@ -146,7 +148,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
             game.player.vel.x = norm_vel_x * game.player.max_speed;
             game.player.vel.y = norm_vel_y * game.player.max_speed;
             vel_mag = game.player.max_speed;
-        } else if (vel_mag < 0.02f) {
+        } else if (vel_mag < 0.01f) {
             // check if almost stopped
             game.player.vel.x = 0.0f;
             game.player.vel.y = 0.0f;
@@ -178,8 +180,8 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
                 game.player.vel.y = 0.0f;
             }
 
-            if (game.player.pos.y + game.player.bounds.origin.y < 12) {
-                game.player.pos.y = -(float)game.player.bounds.origin.y + 12;
+            if (game.player.pos.y + game.player.bounds.origin.y < 10) {
+                game.player.pos.y = -(float)game.player.bounds.origin.y + 10;
                 game.player.vel.y = 0.0f;
             }
         }
@@ -191,12 +193,12 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
         game.enemy.rot += game.enemy.rot_speed * dt;
         
         // update enemy position
-        float tt = t * game.enemy.speed;
+        float tt = t * game.enemy.speed + 20.0f;
         float scale = 2.0f / (3.0f - cosf(2.0f * tt));
         float x = scale * cosf(tt);
         float y = scale * sinf(2.0f * tt) / 2.0f;
-        float x2 = game.canvas->width / 2.0f + x * 72.0f;
-        float y2 = game.canvas->height / 2.0f + y * 80.0f;
+        float x2 = game.canvas->width / 2.0f + x * 48.0f;
+        float y2 = game.canvas->height / 2.0f + y * 64.0f;
 
         game.enemy.pos.x = x2;
         game.enemy.pos.y = y2;
@@ -207,17 +209,14 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
                 Bullet b;
                 b.pos.x = game.enemy.pos.x + game.enemy.bounds.origin.x + game.enemy.bounds.size.x / 2.0f;
                 b.pos.y = game.enemy.pos.y + game.enemy.bounds.origin.y + game.enemy.bounds.size.y / 2.0f;
-                
-                float rot = game.enemy.rot + 0.25f * i;
-                float vel_x = 0.0f;
-                float vel_y = game.bullet_speed;
-                
-                b.vel.x = vel_x * cosf(rot) - vel_y * sinf(rot);
-                b.vel.y = vel_x * sinf(rot) + vel_y * cosf(rot);
-                
+
+                float angle = i * (float)M_PI_2 + game.enemy.rot;
+                b.vel.x = game.bullet_speed * cosf(angle);
+                b.vel.y = game.bullet_speed * sinf(angle);
+
                 array::push_back(game.bullets, b);
             }
-            
+
             game.enemy.bullet_cooldown = dt;
         } else {
             game.enemy.bullet_cooldown += dt;
@@ -232,7 +231,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
         }
 
         // check for out of bounds bullets
-        const math::Rect game_rect = { { 0, 12 }, { game.canvas->width, game.canvas->height - 12 } };
+        const math::Rect game_rect = { { 0, 10 }, { game.canvas->width, game.canvas->height - 10 } };
         for (uint32_t i = 0; i < array::size(game.bullets); ++i) {
             if (!math::is_inside(game_rect, game.bullets[i].pos)) {
                 swap_pop(game.bullets, i);
@@ -257,18 +256,17 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
     }
     
     // draw player
-    sprite(c, 405, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y, color::peach);
-    sprite(c, 206, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y + c.sprite_size, color::peach);
+    sprite(c, 856, (int32_t)game.player.pos.x, (int32_t)game.player.pos.y);
 
     // draw enemy
-    sprite(c, 514, (int32_t)game.enemy.pos.x, (int32_t)game.enemy.pos.y, color::light_gray, 2, 2);
+    sprite(c, 857, (int32_t)game.enemy.pos.x, (int32_t)game.enemy.pos.y);
 
     // draw ui
     rectangle(c, 0, 0, c.width - 1, c.height - 1, color::dark_blue);
     ss::Buffer score_buffer(ta);
     ss::printf(score_buffer, "score:%u", game.player.score);
-    print(c, ss::c_str(score_buffer), 2, 2, color::white);
-    line(c, 0, 11, c.width - 1, 11, color::dark_blue);
+    print(c, ss::c_str(score_buffer), 1, 1, color::white);
+    line(c, 0, 9, c.width - 1, 9, color::dark_blue);
 
     engine::render_canvas(engine, *game.canvas);
 }
@@ -287,7 +285,9 @@ void game_state_playing_render_imgui(engine::Engine &engine, Game &game) {
         ImGui::Text("Player");
         ImGui::Text("Position: %.1f, %.1f", game.player.pos.x, game.player.pos.y);
         ImGui::Text("Velocity: %.1f, %.1f", game.player.vel.x, game.player.vel.y);
-
+        float vel_mag = sqrtf(game.player.vel.x * game.player.vel.x + game.player.vel.y * game.player.vel.y);
+        ImGui::Text("VelMag: %.2f", vel_mag);
+        
         ImGui::Text("Enemy");
         ImGui::Text("Position: %.1f, %.1f", game.enemy.pos.x, game.enemy.pos.y);
 

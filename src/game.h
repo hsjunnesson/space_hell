@@ -62,20 +62,20 @@ struct Player {
     bool button_right = false;
     bool button_action = false;
     char padding[3];
-    float speed_incr = 4.0f;
-    float max_speed = 20.0f;
+    float speed_incr = 2.0f;
+    float max_speed = 0.8f;
     float drag = 0.025f;
-    math::Rect bounds = {{0, 4}, {8, 6}};
+    math::Rect bounds = {{0, 2}, {8, 5}};
 };
 
 struct Enemy {
     math::Vector2f pos = {0.0f, 0.0f};
     float speed = 0.06f;
     float rot = 0.0f;
-    float rot_speed = 0.2f;
-    float bullet_rate = 2.0f;
+    float rot_speed = 0.4f;
+    float bullet_rate = 1.0f;
     float bullet_cooldown = 0.0f;
-    math::Rect bounds = {{1, 0}, {14, 16}};
+    math::Rect bounds = {{0, 0}, {8, 8}};
 };
 
 struct Bullet {
