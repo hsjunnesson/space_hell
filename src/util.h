@@ -1,7 +1,7 @@
 #pragma once
 
-#include <collection_types.h>
 #include <cassert>
+#include <collection_types.h>
 
 // Deletes the copy constructor, the copy assignment operator, the move constructor, and the move assignment operator.
 #define DELETE_COPY_AND_MOVE(T)       \

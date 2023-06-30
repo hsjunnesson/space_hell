@@ -4,7 +4,6 @@
 #include <memory.h>
 #include <string_stream.h>
 #include <temp_allocator.h>
-#include <queue.h>
 
 #include <functional>
 
@@ -33,7 +32,7 @@ Game::Game(Allocator &allocator, const char *config_path)
 , config(nullptr)
 , action_binds(nullptr)
 , canvas(nullptr)
-, imgui_debug(false)
+, show_debug(false)
 , padding()
 , game_state(GameState::None)
 , player()

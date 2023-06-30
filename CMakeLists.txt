@@ -34,6 +34,7 @@ set(SRC_space_hell
     "src/game.cpp"
     "src/game_state_playing.cpp"
     "src/util.h"
+    "src/rnd.h"
 )
 
 # Create executable

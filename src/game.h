@@ -70,12 +70,12 @@ struct Player {
 
 struct Enemy {
     math::Vector2f pos = {0.0f, 0.0f};
-    float speed = 0.06f;
+    float speed = 0.05f;
     float rot = 0.0f;
     float rot_speed = 0.4f;
-    float bullet_rate = 1.0f;
+    float bullet_rate = 0.8f;
     float bullet_cooldown = 0.0f;
-    float bullet_speed = 15.0f;
+    float bullet_speed = 20.0f;
     math::Rect bounds = {{0, 0}, {8, 8}};
 };
 
@@ -89,8 +89,8 @@ struct Food {
 };
 
 struct Bullet {
-    math::Vector2f pos = { 0.0f, 0.0f };
-    math::Vector2f vel = { 0.0f, 0.0f };
+    math::Vector2f pos = {0.0f, 0.0f};
+    math::Vector2f vel = {0.0f, 0.0f};
 };
 
 struct Game {
@@ -102,7 +102,7 @@ struct Game {
     ini_t *config;
     engine::ActionBinds *action_binds;
     engine::Canvas *canvas;
-    bool imgui_debug;
+    bool show_debug;
     char padding[3];
     GameState game_state;
     Player player;

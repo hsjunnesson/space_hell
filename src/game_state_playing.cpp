@@ -2,8 +2,11 @@
 #include "util.h"
 
 #pragma warning(push, 0)
+#include "rnd.h"
+
 #include <cassert>
 #include <cmath>
+#include <ctime>
 
 #include <hash.h>
 #include <queue.h>
@@ -22,15 +25,19 @@ namespace game {
 
 using namespace foundation;
 
+rnd_pcg_t random_device;
+
 void game_state_playing_enter(engine::Engine &engine, Game &game) {
     engine::init_canvas(engine, *game.canvas, game.config);
+
+    rnd_pcg_seed(&random_device, (unsigned int)time(nullptr));
 
     game.player = Player();
     game.player.pos = {24, 24};
 
     game.enemy = Enemy();
     game.enemy.pos = {game.canvas->width / 2.0f - game.enemy.bounds.size.x / 2.0f, game.canvas->height / 2.0f - game.enemy.bounds.size.y / 2.0f};
-    
+
     game.food = Food();
 }
 
@@ -104,7 +111,7 @@ void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::Inp
         }
         case ActionHash::DEBUG: {
             if (pressed) {
-                game.imgui_debug = !game.imgui_debug;
+                game.show_debug = !game.show_debug;
             }
             break;
         }
@@ -116,9 +123,9 @@ void game_state_playing_on_input(engine::Engine &engine, Game &game, engine::Inp
 
 void game_state_playing_update(engine::Engine &engine, Game &game, float t, float dt) {
     (void)engine;
-    
+
     using namespace foundation;
-    
+
     // Update player
     {
         float steer_x = 0.0f;
@@ -193,7 +200,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
     {
         // rotate bullet spawner
         game.enemy.rot += game.enemy.rot_speed * dt;
-        
+
         // update enemy position
         float tt = t * game.enemy.speed + 20.0f;
         float scale = 2.0f / (3.0f - cosf(2.0f * tt));
@@ -204,7 +211,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
 
         game.enemy.pos.x = x2;
         game.enemy.pos.y = y2;
-        
+
         // spawn 4 bullets every few frames
         if (game.enemy.bullet_cooldown >= game.enemy.bullet_rate) {
             for (int i = 0; i < 4; ++i) {
@@ -224,7 +231,7 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
             game.enemy.bullet_cooldown += dt;
         }
     }
-    
+
     // update bullets
     {
         for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
@@ -233,24 +240,53 @@ void game_state_playing_update(engine::Engine &engine, Game &game, float t, floa
         }
 
         // check for out of bounds bullets
-        const math::Rect game_rect = { { 0, 10 }, { game.canvas->width, game.canvas->height - 10 } };
+        const math::Rect game_rect = {{0, 10}, {game.canvas->width, game.canvas->height - 10}};
         for (uint32_t i = 0; i < array::size(game.bullets); ++i) {
             if (!math::is_inside(game_rect, game.bullets[i].pos)) {
                 swap_pop(game.bullets, i);
             }
         }
     }
-    
+
     // update food
     {
+        math::Rect player_rect = game.player.bounds;
+        player_rect.origin.x += (int32_t)game.player.pos.x;
+        player_rect.origin.y += (int32_t)game.player.pos.y;
+
         if (game.food.spawned) {
-            // todo: check if overlapping
+            math::Rect food_rect = game.food.bounds;
+            food_rect.origin.x += (int32_t)game.food.pos.x;
+            food_rect.origin.y += (int32_t)game.food.pos.y;
+
+            if (math::is_inside(player_rect, food_rect)) {
+                game.player.score += 1;
+                if (game.player.score >= 10) {
+                    game.enemy.bullet_rate = 0.75f;
+                }
+                game.food.grace_timer = 0.0f;
+                game.food.spawned = false;
+            }
         } else {
             if (game.food.grace_timer >= game.food.grace) {
-                bool found_pos = false;
-                
-                while (!found_pos) {
-                    // todo: finish here
+                // retry until we find a position outside of enemy and player
+                while (true) {
+                    math::Vector2 pos = {
+                        rnd_pcg_range(&random_device, 2, game.canvas->width - game.food.bounds.size.x - 2),
+                        rnd_pcg_range(&random_device, 11, game.canvas->height - game.food.bounds.size.y - 2)};
+
+                    math::Rect enemy_rect = game.enemy.bounds;
+                    enemy_rect.origin.x += (int32_t)game.enemy.pos.x;
+                    enemy_rect.origin.y += (int32_t)game.enemy.pos.y;
+
+                    if (!math::is_inside(player_rect, pos) && !math::is_inside(enemy_rect, pos)) {
+                        game.food.spawned = true;
+                        game.food.pos.x = (float)pos.x;
+                        game.food.pos.y = (float)pos.y;
+                        int32_t sprite = rnd_pcg_range(&random_device, 859, 862);
+                        game.food.sprite = sprite;
+                        break;
+                    }
                 }
             } else {
                 game.food.grace_timer += dt;
@@ -273,7 +309,7 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
     if (game.food.spawned) {
         sprite(c, game.food.sprite, (int32_t)game.food.pos.x, (int32_t)game.food.pos.y);
     }
-    
+
     // draw bullets
     for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
         pset(c, (int32_t)bullet_iter->pos.x, (int32_t)bullet_iter->pos.y, color::yellow);
@@ -292,16 +328,37 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
     print(c, ss::c_str(score_buffer), 1, 1, color::white);
     line(c, 0, 9, c.width - 1, 9, color::dark_blue);
 
+    if (game.show_debug) {
+        math::Rect enemy_rect = game.enemy.bounds;
+        enemy_rect.origin.x += (int32_t)game.enemy.pos.x;
+        enemy_rect.origin.y += (int32_t)game.enemy.pos.y;
+
+        math::Rect player_rect = game.player.bounds;
+        player_rect.origin.x += (int32_t)game.player.pos.x;
+        player_rect.origin.y += (int32_t)game.player.pos.y;
+
+        math::Rect food_rect = game.food.bounds;
+        food_rect.origin.x += (int32_t)game.food.pos.x;
+        food_rect.origin.y += (int32_t)game.food.pos.y;
+
+        rectangle(c, enemy_rect.origin.x, enemy_rect.origin.y, enemy_rect.origin.x + enemy_rect.size.x, enemy_rect.origin.y + enemy_rect.size.y, color::green);
+        rectangle(c, player_rect.origin.x, player_rect.origin.y, player_rect.origin.x + player_rect.size.x, player_rect.origin.y + player_rect.size.y, color::green);
+
+        if (game.food.spawned) {
+            rectangle(c, food_rect.origin.x, food_rect.origin.y, food_rect.origin.x + food_rect.size.x, food_rect.origin.y + food_rect.size.y, color::green);
+        }
+    }
+
     engine::render_canvas(engine, *game.canvas);
 }
 
 void game_state_playing_render_imgui(engine::Engine &engine, Game &game) {
     (void)engine;
 
-    if (game.imgui_debug) {
-        ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Once);
+    if (game.show_debug) {
+        ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiCond_Once);
         ImGui::SetNextWindowPos(ImVec2(8, 8), ImGuiCond_Once);
-        if (!ImGui::Begin("Debug", &game.imgui_debug)) {
+        if (!ImGui::Begin("Debug", &game.show_debug)) {
             ImGui::End();
             return;
         }
@@ -309,17 +366,28 @@ void game_state_playing_render_imgui(engine::Engine &engine, Game &game) {
         ImGui::Text("Player");
         ImGui::Text("Position: %.1f, %.1f", game.player.pos.x, game.player.pos.y);
         ImGui::Text("Velocity: %.1f, %.1f", game.player.vel.x, game.player.vel.y);
+        ImGui::Text("Score: %d", game.player.score);
         float vel_mag = sqrtf(game.player.vel.x * game.player.vel.x + game.player.vel.y * game.player.vel.y);
         ImGui::Text("VelMag: %.2f", vel_mag);
-        
+
+        ImGui::Text("");
+
         ImGui::Text("Enemy");
         ImGui::Text("Position: %.1f, %.1f", game.enemy.pos.x, game.enemy.pos.y);
-
         ImGui::Text("Bullets: %d", array::size(game.bullets));
-
-        if (ImGui::Button("Clear Bullets")) {
+        ImGui::SameLine();
+        if (ImGui::Button("Clear")) {
             array::clear(game.bullets);
         }
+
+        ImGui::Text("");
+
+        ImGui::Text("Food");
+        ImGui::Text("Spawned: ");
+        ImGui::SameLine();
+        ImGui::Text(game.food.spawned ? "true" : "false");
+        ImGui::Text("Position: (%.1f, %.1f)", game.food.pos.x, game.food.pos.y);
+        ImGui::Text("Cooldown: %.1fs", game.food.grace - game.food.grace_timer);
 
         ImGui::End();
     }
