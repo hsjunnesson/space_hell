@@ -37,6 +37,7 @@ Game::Game(Allocator &allocator, const char *config_path)
 , game_state(GameState::None)
 , player()
 , enemy()
+, food()
 , bullets(allocator) {
     using namespace string_stream;
     TempAllocator1024 ta;
