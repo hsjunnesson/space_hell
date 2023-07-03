@@ -312,7 +312,7 @@ void game_state_playing_render(engine::Engine &engine, Game &game) {
 
     // draw bullets
     for (Bullet *bullet_iter = array::begin(game.bullets); bullet_iter != array::end(game.bullets); ++bullet_iter) {
-        pset(c, (int32_t)bullet_iter->pos.x, (int32_t)bullet_iter->pos.y, color::yellow);
+        pset(c, (int32_t)bullet_iter->pos.x, (int32_t)bullet_iter->pos.y, color::red);
     }
 
     // draw player
